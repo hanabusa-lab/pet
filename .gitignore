@@ -1,0 +1,7 @@
+/webapp/media/
+/webapp/pets/static/pets/
+*.pyc
+*.org
+*.bk
+*.swp
+

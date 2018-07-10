@@ -1,0 +1,79 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>HTTP Live Streaming</title>
+  <script src="https://cdn.jsdelivr.net/hls.js/latest/hls.min.js"></script>
+
+<script>
+window.onload = function() {
+    console.log('ready 2');
+
+    if (Hls.isSupported()) {
+    var video = document.getElementById('video');
+  var hls = new Hls();
+  //hls.loadSource('/static/pets/playlist.m3u8');
+ //hls.loadSource('/media/playlist.m3u8');
+hls.loadSource('/media/stream/playlist.m3u8');
+    
+
+ hls.attachMedia(video);
+
+  hls.on(Hls.Events.MANIFEST_PARSED, function () {
+/*        video.play();*/
+/*video.pause();
+video.currentTime = 0;*/
+  });
+
+//We listen when we can play our video hls
+video.addEventListener('canplaythrough', function () {
+        var promise = video.play();
+        if (promise !== undefined) {
+            promise.catch(function(error) {
+                console.error('Auto-play was prevented');
+                console.error('We Show a UI element to let the user manually start playback');
+                //buttonPlay.style.display = 'block';
+            }).then(function() {
+                console.info('Auto-play started');
+                //buttonPlay.style.display = 'none';
+            });
+        }
+}); //  Fires when the browser can play through the audio/video without stopping for buffering
+
+video.muted = 'muted';
+video.autoplay = 'autoplay';
+video.playsinline = 'true';
+
+}
+
+}
+/*
+function jumptolatest() {
+    document.getElementById("video").currentTime = 99999999;
+}
+setTimeout("jumptolatest()", 2000);
+*/
+
+
+</script>
+</head>
+
+<body>
+
+  <h1>Now 3D Printing !</h1>
+media<br> 
+ <img src="/media/test.png" alt="海の写真" title="空と海">
+pets static<br>
+ <img src="/static/pets/test.png" alt="海の写真" title="空と海">
+    
+
+  <div>
+<!--
+    <video id="video" width="640" height="480" crossOrigin="anonymous" autoplay="autoplay" controls="controls">
+-->
+<video id="video" autoplay=""></video>
+
+  </div>
+</body>
+
+</html>
