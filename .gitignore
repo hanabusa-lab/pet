@@ -1,5 +1,6 @@
 /webapp/media/
-/webapp/pets/static/pets/
+/webapp/pet/static/pet/
+/webapp/pet/migrations/
 *.pyc
 *.org
 *.bk
