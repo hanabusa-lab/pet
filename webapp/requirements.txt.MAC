@@ -1,0 +1,15 @@
+#django==2.0.7
+django
+djangorestframework
+django-filter
+mysqlclient
+Pillow
+tensorflow==1.0
+keras==1.2.2
+opencv-python
+matplotlib
+scipy
+numpy
+h5py
+sklearn
+pandas

@@ -13,7 +13,7 @@ router.register(r'api', PetImageViewSet)
 
 
 urlpatterns = [
-    #path('', views.index, name='index'),
+    path('', views.index, name='index'),
     url(r'^', include(router.urls)),
     #url(r'^api/$', views.PetImageViewSet),
 ]

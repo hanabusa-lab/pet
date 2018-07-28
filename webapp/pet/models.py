@@ -34,7 +34,7 @@ class PetImage(models.Model):
     CHECK_STATUS_NG = 2
     
     pet = models.ForeignKey(PetInfo, on_delete=models.CASCADE, null=True)
-    img = models.ImageField(upload_to='pet/pre_img', default='pet/pre_img')
+    img = models.ImageField(upload_to='pet/img', default='pet/img')
     date = models.DateTimeField(auto_now=False, null=True)
     tag_id = models.IntegerField(default=0, null=True)
     unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE, null=True)
