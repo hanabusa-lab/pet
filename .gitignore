@@ -1,8 +1,9 @@
 /webapp/media/
 /webapp/pet/static/pet/
 /webapp/pet/migrations/
+.DS_Store
 *.pyc
 *.org
 *.bk
 *.swp
-*DS_Store
+

@@ -4,7 +4,9 @@ import cv2
 from keras.applications.imagenet_utils import preprocess_input
 from keras.backend.tensorflow_backend import set_session
 from keras.preprocessing import image
+import matplotlib
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 import numpy as np
 from scipy.misc import imread
 import tensorflow as tf
@@ -107,7 +109,7 @@ class FeatureDetector:
 
             plt.imshow(img / 255.)  # 画像描画
             currentAxis = plt.gca()
-
+            
             # 描画(認識結果ごとループ)
             for i in range(top_conf.shape[0]):
                 xmin = int(round(top_xmin[i] * img.shape[1]))
@@ -120,14 +122,16 @@ class FeatureDetector:
                 display_txt = '{:0.2f}, {}'.format(score, label_name)
                 coords = (xmin, ymin), xmax-xmin+1, ymax-ymin+1
                 color = colors[label]
+                
                 currentAxis.add_patch(plt.Rectangle(
                     *coords, fill=False, edgecolor=color, linewidth=2))
                 currentAxis.text(xmin, ymin, display_txt, bbox={
                                  'facecolor': color, 'alpha': 0.5})
+                
                 # print(xmin, ymin, xmax, ymax)
 
             # 保存
-            # plt.savefig("./data/recognition_imgs/"+os.path.basename(img_paths[i_]))
+            #plt.savefig("./data/recognition_imgs/"+os.path.basename(img_paths[i_]))
             plt.close()
 
         import gc
