@@ -54,10 +54,19 @@ class ImgProcessor():
         data = cl.OrderedDict()
         self.imgEvaluator.setFeatures(self.featureDetector.features)  # 特徴量をセット
         data["score"] = self.imgEvaluator.evaluate()[0][1]  # 良画像の確率を出力
-        data["x"] = self.featureDetector.rois[0][0]
-        data["y"] = self.featureDetector.rois[0][1]
-        data["width"] = self.featureDetector.rois[0][2]
-        data["height"] = self.featureDetector.rois[0][3]
+        if self.featureDetector.rois!=[[]]:
+            # ワンちゃん検出されている場合
+            data["x"] = self.featureDetector.rois[0][0]
+            data["y"] = self.featureDetector.rois[0][1]
+            data["width"] = self.featureDetector.rois[0][2]
+            data["height"] = self.featureDetector.rois[0][3]
+        else:
+            # ワンちゃん検出されていない場合
+            data["x"] = -1
+            data["y"] = -1
+            data["width"] = -1
+            data["height"] = -1
+            
         ys["picture info"] = data
         fw = open(fname, 'w')
         json.dump(ys, fw, indent=4)
@@ -69,4 +78,5 @@ if __name__ == '__main__':
     入力：画像のファイルパス、出力：評価結果json
     """
     imgProcessor = ImgProcessor()
-    imgProcessor.proc("./data/sample/000006.png", "./data/sample/000006.json")
+    # imgProcessor.proc("./data/sample/000006.png", "./data/sample/000006.json")
+    imgProcessor.proc("./data/sample/2.jpg", "./data/sample/2.json")
