@@ -4,9 +4,6 @@ import cv2
 from keras.applications.imagenet_utils import preprocess_input
 from keras.backend.tensorflow_backend import set_session
 from keras.preprocessing import image
-import matplotlib
-import matplotlib.pyplot as plt
-plt.switch_backend('agg')
 import numpy as np
 from scipy.misc import imread
 import tensorflow as tf
@@ -14,6 +11,8 @@ import glob
 from ssd import SSD300
 from ssd_utils import BBoxUtility
 import warnings
+import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 warnings.filterwarnings('ignore')  # warning非表示
 
 
@@ -35,7 +34,7 @@ class FeatureDetector:
 
     def objct_recognition(self, img_paths):
         """
-        ssdを用いた物体検出    
+        ssdを用いた物体検出
         """
         """各種設定"""
         self.img_paths = img_paths
@@ -109,7 +108,7 @@ class FeatureDetector:
 
             plt.imshow(img / 255.)  # 画像描画
             currentAxis = plt.gca()
-            
+
             # 描画(認識結果ごとループ)
             for i in range(top_conf.shape[0]):
                 xmin = int(round(top_xmin[i] * img.shape[1]))
@@ -122,16 +121,16 @@ class FeatureDetector:
                 display_txt = '{:0.2f}, {}'.format(score, label_name)
                 coords = (xmin, ymin), xmax-xmin+1, ymax-ymin+1
                 color = colors[label]
-                
+
                 currentAxis.add_patch(plt.Rectangle(
                     *coords, fill=False, edgecolor=color, linewidth=2))
                 currentAxis.text(xmin, ymin, display_txt, bbox={
                                  'facecolor': color, 'alpha': 0.5})
-                
+
                 # print(xmin, ymin, xmax, ymax)
 
             # 保存
-            #plt.savefig("./data/recognition_imgs/"+os.path.basename(img_paths[i_]))
+            # plt.savefig("./data/recognition_imgs/"+os.path.basename(img_paths[i_]))
             plt.close()
 
         import gc
@@ -421,9 +420,11 @@ class FeatureDetector:
                     (top_ymax[i]*shape[1] - top_ymin[i]*shape[1])
                 if tmp_size > size:
                     size = tmp_size
-                    
-                    roi = [int(top_xmin[i]*shape[0]), int(top_ymin[i]*shape[1]), int(
-                        (top_xmax[i]-top_xmin[i])*shape[0]), int((top_ymax[i]-top_ymin[i])*shape[1])]
+                    x = int(top_xmin[i]*shape[0])
+                    y = int(top_ymin[i]*shape[1])
+                    w = int((top_xmax[i]-top_xmin[i])*shape[0])
+                    h = int((top_ymax[i]-top_ymin[i])*shape[1])
+                    roi = [x, y, w, h]
         return roi
 
     def calcRois(self):

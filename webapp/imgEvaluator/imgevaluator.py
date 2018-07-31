@@ -124,7 +124,6 @@ class ImgEvaluator():
         self.__makeResultDir(np.hstack(test_files),
                              np.hstack(trues), np.hstack(preds))
 
-
     def __setResultDir(self):
         # 正解TP, 検出漏れFN, 誤検出FP, 正解TN
         if os.path.exists("./data/TP"):
@@ -138,8 +137,8 @@ class ImgEvaluator():
         os.mkdir("./data/TP")
         os.mkdir("./data/FN")
         os.mkdir("./data/FP")
-        os.mkdir("./data/TN")        
-        
+        os.mkdir("./data/TN")
+
     def __makeResultDir(self, test_files, trues, preds):
         # 予測結果を出力
         # ディレクトリ削除&生成
@@ -158,7 +157,6 @@ class ImgEvaluator():
             if true == 0 and pred == 0:
                 shutil.copyfile(test_file, "./data/TN/"+basename)
 
-                
     def makeDictionary(self):
         """
         全特徴量を用いて辞書学習
