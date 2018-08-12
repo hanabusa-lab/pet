@@ -3,8 +3,10 @@ import django_filters
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-import os
+import sys,os
 import json
+sys.path.append("imgEvaluator")
+from imgprocessor import ImgProcessor
 
 # Create your views here.
 from django.http import HttpResponse
@@ -44,9 +46,19 @@ class PetImageViewSet(viewsets.ModelViewSet):
         #nocheck_list  = PetImage.objects.all().filter(check_status=0)
         nocheck_list = PetImage.objects.all()
         #チェックの実施
+        imgProcessor = ImgProcessor()
+        
         cnt = 0;
         for img in nocheck_list:
             print(img)
+            if os.path.exists("media/"+str(img.img)) :
+                print("exec imgProcess")
+                #imgProcessor.proc("media/"+str(img.img), "tmp_img_result.json")
+                imgProcessor.proc('2.jpg', "tmp_img_result.json")
+            else :
+                print("file not exist.", "media/"+str(img.img))
+                            
+
             cnt+=1
             img.check_status = 1
             if cnt >= max_cnt :
