@@ -6,6 +6,8 @@ import os
 import sys
 from datetime import datetime
 
+SERV_IP = "172.20.10.6:8080"
+
 #Tagの初期化
 def init_tag_reader() :
     reader = mercury.Reader("tmr:///dev/ttyUSB0", baudrate=115200)
@@ -36,17 +38,24 @@ if __name__== '__main__':
 
         #画像の取得
         now= datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = '/pet/dat/'+now+".png"
+        filename = '/pet/dat/'+now+".jpg"
         print(filename)
-        cmd = 'raspistill -w 480 -h 360 -n -t 10 -o '+filename
+        cmd = 'raspistill -w 1200 -h 900 -n -t 10 -q 100 -e jpg -o '+filename
         os.system(cmd)
 
         #サーバーへの画像の送信
         #cmd = curl -X POST -S   -H 'Accept: application/json'   -F "comment=test3"   -F "img=@/#pet/dat/out.png;type=image/png"   "http://172.20.10.6:8080/pet/api/post_img/"
 
-        cmd = "curl -X POST -S   -H 'Accept: application/json'   -F 'comment=test3'   -F 'img=@"+filename+";type=image/png\' 'http://172.20.10.6:8080/pet/api/post_img/'"
+        cmd = "curl -X POST -S   -H 'Accept: application/json'   -F 'comment=test3'   -F 'img=@"+filename+";type=image/jpg\' 'http://"+SERV_IP+"/pet/api/post_img/'"
         print(cmd)
         os.system(cmd)
+
+        #サーバーに対して画像チェック依頼
+        cmd = "curl -X POST -S 'http://"+SERV_IP+"/pet/api/check_img/' -d 'num=2'"
+        print(cmd)
+        os.system(cmd)
+
+        #"http://localhost:8080/pet/api/check_img/" -d "num=2"
 
         time.sleep(0.5)
         sys.exit()

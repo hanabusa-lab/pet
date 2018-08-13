@@ -35,11 +35,12 @@ class PetImage(models.Model):
     
     pet = models.ForeignKey(PetInfo, on_delete=models.CASCADE, null=True)
     img = models.ImageField(upload_to='pet/img', default='pet/img')
-    date = models.DateTimeField(auto_now=False, null=True)
+    date = models.DateTimeField(auto_now=True, null=True)
     tag_id = models.IntegerField(default=0, null=True)
     unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE, null=True)
     comment = models.CharField(max_length=256, null=True)
     check_status = models.IntegerField(default=0, null=True)
+    eval_result = models.CharField(max_length=256, null=True)
 
     #def __str__(self):
     #    return self.pet.name+" "+self.date.strftime('%Y-%m-%d %H:%M')

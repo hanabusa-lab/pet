@@ -130,7 +130,9 @@ class FeatureDetector:
                 # print(xmin, ymin, xmax, ymax)
 
             # 保存
-            # plt.savefig("./data/recognition_imgs/"+os.path.basename(img_paths[i_]))
+            #plt.savefig("./data/recognition_imgs/"+os.path.basename(img_paths[i_]))
+            plt.savefig(os.path.basename(img_paths[i_]))
+            
             plt.close()
 
         import gc
