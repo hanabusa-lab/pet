@@ -11,8 +11,9 @@ import picamera
 
 #定義関連
 SWITCH_IO = 17  #スイッチのGPIOピン
-SERV_IP = "172.20.10.6:8080" #サーバのIPアドレス
-SERV_FG = False #サーバの有効化フラグ
+#SERV_IP = "172.20.10.6:8080" #サーバのIPアドレス
+SERV_IP = "192.168.3.9:8080" #サーバのIPアドレス
+SERV_FG = True #サーバの有効化フラグ
 TAG_FG = True   #タグの有効化フラグ
 
 #グローバル変数
@@ -49,7 +50,7 @@ def capture_send_img(tagid):
 
     #ファイル名称の作成
     now= datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = '/pet/dat/'+now+'_'+str(tagid)+".jpg"
+    filename = '/pet/dat/'+now+'_'+str(tagid)[2:26]+".jpg"
     print("filename=", filename)
     #cmd = 'raspistill -w 1200 -h 900 -n -t 10 -q 100 -e jpg -o '+filename
     #os.system(cmd)
