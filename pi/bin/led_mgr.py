@@ -1,15 +1,32 @@
 # -*- coding: utf-8 -*-
 from time import sleep
+import time
 import os
 import  json
 import pprint
 import threading
 import signal
 import sys
+from neopixel import *
+from pet_def import *
+import datetime
 
 #定数定義
 SAMPLING_TIME=0.5           #サンプリングタイム
 LED_REQ='../dat/led_req.json' #LEDリクエストファイル
+
+# LED strip configuration:
+#LED_COUNT      = 16      # Number of LED pixels.
+LED_COUNT      = 2      # Number of LED pixels.
+LED_PIN        = 18      # GPIO pin connected to the pixels (18 uses PWM!).
+#LED_PIN        = 10      # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
+LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
+LED_DMA        = 10      # DMA channel to use for generating signal (try 10)
+LED_BRIGHTNESS = 25     # Set to 0 for darkest and 255 for brightest
+LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift)
+LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+
+
 
 #グローバル変数
 gthread_led = ""
@@ -18,6 +35,15 @@ gled_cntrl = 0  #0:None, 1:START, 2:STOP
 gled_pattern = 0
 gled_time = 0
 gled_color = (0,0,0)
+gled_start_time = None
+
+# Define functions which animate LEDs in various ways.
+def colorWipe(strip, color, wait_ms=50):
+    """Wipe color across display a pixel at a time."""
+    for i in range(strip.numPixels()):
+        strip.setPixelColor(i, color)
+        strip.show()
+        time.sleep(wait_ms/1000.0)
 
 #jsonファイルのパース処理
 def parse_req_file(filename) :
@@ -26,9 +52,49 @@ def parse_req_file(filename) :
     pprint.pprint(d, width=40)
     return d
 
+#LEDスレッド
+def exec_led_thread() :
+    global gthread_enablefg, gled_cntrl, gled_pattern, gled_time, gled_color
+
+    # Create NeoPixel object with appropriate configuration.
+    strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+    # Intialize the library (must be called once before other functions).
+    strip.begin()
+
+    while 1 :
+        if gthread_enablefg == False :
+            print("end exec_led_thread")
+            return
+         
+        #停止処理の場合  
+        if gled_cntrl ==  LEDCntrl.STOP:
+            colorWipe(strip, Color(0, 0, 0))
+            sleep(SAMPLING_TIME)
+            continue
+ 
+        #経過時間のチェック
+        if gled_start_time != None and gled_time > 0:
+            now = datetime.datetime.now()  
+            diftime = now - gled_start_time  
+            if diftime.total_seconds() > gled_time :
+                colorWipe(strip, Color(0, 0, 0))
+                sleep(SAMPLING_TIME)
+                continue
+ 
+        #モードごとの実行
+        if gled_pattern == LEDPattern.WIPE : 
+            print("exec color Wipe", gled_color)
+            #colorWipe(strip, Color(gled_color[0], gled_color[1], gled_color[2]))  
+            #colorWipe(strip, Color(0, 255,0)) #RED
+            #colorWipe(strip, Color(0, 0,255)) #Blue
+            colorWipe(strip, Color(gled_color[1], gled_color[0], gled_color[2]))  
+               
+
+        sleep(SAMPLING_TIME)
+        
 #LEDコントロール情報の更新
 def update_led_cntrl(d): 
-    global gled_cntrl, gled_pattern, gled_time, gled_color
+    global gled_cntrl, gled_pattern, gled_time, gled_color, gled_start_time
 
     print("exec_led_cnrl arg=",d)
 
@@ -44,23 +110,16 @@ def update_led_cntrl(d):
     if d.get('COLOR') != None :
          gled_color = (d.get('COLOR')[0], d.get('COLOR')[1], d.get('COLOR')[2])
 
-    #色の確認
+    #時間の確認
     if d.get('TIME') != None :
-         gled_time = int(d.get('TIME'))
+        gled_time = int(d.get('TIME'))
+        #Timeが指定されている場合には時間を更新する。
+        gled_start_time =  datetime.datetime.now()    
+    else :
+        #Timeが設定されていない場合には、開始時間をNoneに設定する。
+        gled_start_time = None
     
-    print("cntrl",gled_cntrl, "pattern", gled_pattern, "time", gled_time, "color", gled_color)
-
-#LEDスレッド
-def exec_led_thread() :
-    global gthread_enablefg, gled_cntrl, gled_pattern, gled_time, gled_color
-
-    while 1 :
-        if gthread_enablefg == False :
-            print("end exec_led_thread")
-            return
-
-        print("LED")
-        sleep(SAMPLING_TIME)
+    print("update_led_cntrl. cntrl",gled_cntrl, "pattern", gled_pattern, "time", gled_time, "color", gled_color)
         
 #終了処理
 def handler(signal, frame):
@@ -80,10 +139,16 @@ if __name__== '__main__':
     with open('../dat/led_req.json', 'w') as f:
         json.dump(d, f, indent=4)
     """
-
+    """    
+    print("enum test", LEDCntrl.NONE)
+    if LEDCntrl.NONE == 0 :
+        print("enum test ok", LEDCntrl.NONE)
+    """
+    
     #シグナルハンドラの登録(Cntrl+Cを受け取った際の終了処理)
     signal.signal(signal.SIGINT, handler)
 
+  
     #LEDスレッドの作成と実行
     gthread_led = threading.Thread(target=exec_led_thread)
     gthread_led.start()
