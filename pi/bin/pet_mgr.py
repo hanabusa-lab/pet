@@ -5,7 +5,8 @@ import time
 import mercury
 import os
 import sys
-from datetime import datetime
+#from datetime import datetime
+import datetime
 import RPi.GPIO as GPIO
 import picamera
 
@@ -15,6 +16,7 @@ SWITCH_IO = 17  #スイッチのGPIOピン
 SERV_IP = "192.168.3.9:8080" #サーバのIPアドレス
 SERV_FG = True #サーバの有効化フラグ
 TAG_FG = True   #タグの有効化フラグ
+SHUTDOWN_TIME = 6
 
 #グローバル変数
 gcamera = ""
@@ -49,8 +51,8 @@ def capture_send_img(tagid):
     global gcamera
 
     #ファイル名称の作成
-    now= datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = '/pet/dat/'+now+'_'+str(tagid)[2:26]+".jpg"
+    now= datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = '/pet/dat/'+now+'_'+tagid+".jpg"
     print("filename=", filename)
     #cmd = 'raspistill -w 1200 -h 900 -n -t 10 -q 100 -e jpg -o '+filename
     #os.system(cmd)
@@ -77,6 +79,8 @@ def capture_send_img(tagid):
 if __name__== '__main__':
     #パラメータの初期化
     swchfg = ""
+    preswchfg = ""
+    swchpushtime =  datetime.datetime.now()
 
     #gpioの初期化
     GPIO.setmode(GPIO.BCM)
@@ -112,26 +116,34 @@ if __name__== '__main__':
         if len(taglist) > 0 :
             tagid = taglist[0].epc
             print("tagid=",tagid)
-            capture_send_img(tagid)
+            capture_send_img(str(tagid)[2:26])
         
-    
-        time.sleep(0.5)        
-    '''
-    #tag readerの初期化
-    #init_tag_reader()
+        #Switchが押されていたら撮影を行う。
+        if swchfg != preswchfg and  swchfg == 1:
+            print("switch on. exec capture")
+            capture_send_img("MANUAL")
 
-    #Cameraの初期化
-
-    #実行ループの開始
-    while 1 :
-        
-        #tag readerの読み込みチェック
-        #print(reader.read(100))
-        
-        #tag readerの反応があった場合
-        if tagreadFg == True  :
-            capture_send_img()
-
+        #swchが押された時点の状態を記録する。
+        if swchfg != preswchfg :
+            if swchfg == 1:
+                swchpushtime =  datetime.datetime.now()
+                #print("update swhchpushtime on =", swchpushtime)
+            if swchfg == 0:
+                swhchpushtime = ""
+                #print("update swhchpushtime off=", swhchpushtime)
+          
+        #swchが押され続けていた時間が一定時間以上経過したらシャットダウン
+        if swchfg == 1 and swchpushtime != "" :
+            now = datetime.datetime.now()
+            diftime = now - swchpushtime
+            
+            print(type(diftime), diftime, "dif time = ", diftime.total_seconds())
+            if diftime.total_seconds() > SHUTDOWN_TIME :
+                cmd = 'sudo shutdown -h now'
+                print("exec shutdown", cmd)
+                os.system(cmd)
+            
         time.sleep(0.5)
-        sys.exit()
-    '''
+        preswchfg = swchfg
+
+        #sys.exit()
