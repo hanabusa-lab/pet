@@ -55,7 +55,7 @@ class ImgProcessor():
         data = cl.OrderedDict()
         self.imgEvaluator.setFeatures(self.featureDetector.features)  # 特徴量をセット
         data["score"] = self.imgEvaluator.evaluate()[0][1]  # 良画像の確率を出力
-        if self.featureDetector.rois != [[]]:
+        if self.featureDetector.rois != [[]] and len(self.featureDetector.rois[0]) > 1:
             # ワンちゃん検出されている場合
             data["x"] = self.featureDetector.rois[0][0]
             data["y"] = self.featureDetector.rois[0][1]
