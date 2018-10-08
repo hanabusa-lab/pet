@@ -9,4 +9,4 @@ class LEDCntrl(IntEnum):
 class LEDPattern(IntEnum):
     NONE = 0
     WIPE = 1
-    STOP = 2
+    BRIGHT = 2

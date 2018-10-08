@@ -9,8 +9,13 @@ import sys
 import datetime
 import RPi.GPIO as GPIO
 import picamera
+import  json
+import pprint
+from pet_def import *
 
 #定義関連
+TAG_COLOR_CONF = "../dat/tag_color.json"
+LED_REQ_FILE = "../dat/led_req.json"
 SWITCH_IO = 17  #スイッチのGPIOピン
 #SERV_IP = "172.20.10.6:8080" #サーバのIPアドレス
 SERV_IP = "192.168.3.9:8080" #サーバのIPアドレス
@@ -21,6 +26,7 @@ SHUTDOWN_TIME = 6
 #グローバル変数
 gcamera = ""
 greader = ""
+gtag_color = ""
 
 #Tagの初期化
 def init_tag_reader() :
@@ -48,11 +54,24 @@ def init_camera() :
     
 #画像の取得とサーバへの送信
 def capture_send_img(tagid):
-    global gcamera
+    global gcamera, gtag_color
+    print("gtag_color",gtag_color, "tagid",tagid)
+
+    color = (255,255,255)
+    #LEDリクエスト
+    if gtag_color.get(tagid) != None :
+        color = gtag_color.get(tagid)
+        print("color", color )         
+    
+    #LEDリクエストファイルの作成
+    d={'PATTERN':int(LEDPattern.BRIGHT), 'COLOR':(color[0], color[1],color[2]), 'CNTRL':int(LEDCntrl.START), 'TIME':30}
+    print(d)
+    with open(LED_REQ_FILE, 'w') as f:
+        json.dump(d, f, indent=4)
 
     #ファイル名称の作成
     now= datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = '/pet/dat/'+now+'_'+tagid+".jpg"
+    filename = '/pet/img/'+now+'_'+tagid+".jpg"
     print("filename=", filename)
     #cmd = 'raspistill -w 1200 -h 900 -n -t 10 -q 100 -e jpg -o '+filename
     #os.system(cmd)
@@ -73,14 +92,33 @@ def capture_send_img(tagid):
         print(cmd)
         os.system(cmd)
 
+    #LEDリクエストのOFF
+    print("off request")
+    d={'CNTRL':int(LEDCntrl.STOP)}
+    print(d)
+    with open(LED_REQ_FILE, 'w') as f:
+        json.dump(d, f, indent=4)
+
         #"http://localhost:8080/pet/api/check_img/" -d "num=2"
 
-
 if __name__== '__main__':
+    #global gtag_color
     #パラメータの初期化
     swchfg = ""
     preswchfg = ""
     swchpushtime =  datetime.datetime.now()
+
+    #タグと色の対応づけ情報の取得
+    with open(TAG_COLOR_CONF) as f:
+        gtag_color = json.load(f)
+        pprint.pprint(gtag_color, width=40)
+
+    if gtag_color.get("E20040057305011623802048") != None :
+        color = gtag_color.get("E20040057305011623802048")
+        print("color", color )         
+
+    
+    #sys.exit()
 
     #gpioの初期化
     GPIO.setmode(GPIO.BCM)
@@ -115,7 +153,7 @@ if __name__== '__main__':
          #複数のワンちゃんがいたら、最初のワンちゃんを撮影する 
         if len(taglist) > 0 :
             tagid = taglist[0].epc
-            print("tagid=",tagid)
+            print("tagid=",tagid, "strtagid", str(tagid), "strtagid2", str(tagid)[2:26])
             capture_send_img(str(tagid)[2:26])
         
         #Switchが押されていたら撮影を行う。

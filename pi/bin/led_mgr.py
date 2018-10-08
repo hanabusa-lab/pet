@@ -12,7 +12,7 @@ from pet_def import *
 import datetime
 
 #定数定義
-SAMPLING_TIME=0.5           #サンプリングタイム
+SAMPLING_TIME=0.3           #サンプリングタイム
 LED_REQ='../dat/led_req.json' #LEDリクエストファイル
 
 # LED strip configuration:
@@ -45,6 +45,17 @@ def colorWipe(strip, color, wait_ms=50):
         strip.show()
         time.sleep(wait_ms/1000.0)
 
+def colorBright(strip, color, wait_ms=50):
+    """Wipe color across display a pixel at a time."""
+    for j in range(20):
+        for i in range(strip.numPixels()):
+            if (i+j)%2 == 0 :
+                strip.setPixelColor(i, color)
+            else :
+                strip.setPixelColor(i, Color(0,0,0)) 
+            strip.show()
+        time.sleep(wait_ms/1000.0)
+
 #jsonファイルのパース処理
 def parse_req_file(filename) :
     with open(LED_REQ) as f:
@@ -60,9 +71,12 @@ def exec_led_thread() :
     strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
     # Intialize the library (must be called once before other functions).
     strip.begin()
+    #clear pre color
+    colorWipe(strip, Color(0, 0, 0))
 
     while 1 :
         if gthread_enablefg == False :
+            colorWipe(strip, Color(0, 0, 0))
             print("end exec_led_thread")
             return
          
@@ -84,13 +98,13 @@ def exec_led_thread() :
         #モードごとの実行
         if gled_pattern == LEDPattern.WIPE : 
             print("exec color Wipe", gled_color)
-            #colorWipe(strip, Color(gled_color[0], gled_color[1], gled_color[2]))  
-            #colorWipe(strip, Color(0, 255,0)) #RED
-            #colorWipe(strip, Color(0, 0,255)) #Blue
-            colorWipe(strip, Color(gled_color[1], gled_color[0], gled_color[2]))  
-               
+            colorWipe(strip, Color(gled_color[1], gled_color[0], gled_color[2])) 
+            sleep(SAMPLING_TIME)
+            continue
+        
+        if gled_pattern == LEDPattern.BRIGHT :
+               colorBright(strip, Color(gled_color[1], gled_color[0], gled_color[2])) 
 
-        sleep(SAMPLING_TIME)
         
 #LEDコントロール情報の更新
 def update_led_cntrl(d): 
@@ -158,7 +172,7 @@ if __name__== '__main__':
         #check conf file
         if os.path.exists(LED_REQ) == True :
             d=parse_req_file(LED_REQ)
-            #os.remove(LED_REQ)
+            os.remove(LED_REQ)
             update_led_cntrl(d)
         
         sleep(SAMPLING_TIME)
