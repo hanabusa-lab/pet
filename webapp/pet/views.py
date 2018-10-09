@@ -43,7 +43,7 @@ class PetImageViewSet(viewsets.ModelViewSet):
             print("max_cnt", max_cnt)
 
         #PetImageで未チェックのものを取得する。
-        nocheck_list  = PetImage.objects.all().filter(check_status=0)
+        nocheck_list  = PetImage.objects.all().filter(check_status=0).order_by('-date')
         #nocheck_list = PetImage.objects.all()
         #チェックの実施
         imgProcessor = ImgProcessor()
@@ -103,20 +103,36 @@ class PetImageViewSet(viewsets.ModelViewSet):
     #チェック済画像リストの取得    
     @action(methods=['get'], detail=False)
     def get_checked_imglist(self, request):
+        #取得数のチェック
+        max_cnt = 50
+        if "num" in request.GET :
+            max_cnt = int(request.GET['num'])
+            print("max_cnt", max_cnt)
+
+        """
+        print("request get", request.GET, request.GET['num'])
+        if "query_param" in request.GET:
+            # query_paramが指定されている場合の処理
+            param_value = request.GET.get("query_param")
+            print("params", param_value)        
+        """
+
         #要求の候補。数、Pet対象、お友達と一緒、取得時期
-        list_num = 10
         img_list = PetImage.objects.all().filter(check_status=PetImage.CHECK_STATUS_OK).order_by('-date')
         
         json_img_list = {}
         for i in range(len(img_list)):
+            if i >= max_cnt :
+                break 
             #json_img_list[i] = str(img_list[i].img)
             jd = json.loads(img_list[i].eval_result)
-            print(jd['picture info']['x'])
+            #print(jd['picture info']['x'])
             #json_img_list[i] = '{"file":"'+ str(img_list[i].img)+'\", "x":"+str(jd['picture info']['x'])+",'y':"+str(jd['picture info']['y'])+ ",'width':"+str(jd['picture info']['width'])+",'height':"+str(jd['picture info']['height'])+ "}"
             json_img_list[i] = '{"file":"'+ str(img_list[i].img)+'\", "x":'+str(jd['picture info']['x'])+',"y":'+str(jd['picture info']['y'])+ ',"width":'+str(jd['picture info']['width'])+',"height":'+str(jd['picture info']['height'])+ '}'
             #json_img_list[i] = '{"file":"a"}' 
             #json_img_list[i] = str(img_list[i].img)
-
+            
+            
         '''
         if  serializer.is_valid():
             new_serializer=serializer.create(serializer.validated_data, true)
