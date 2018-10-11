@@ -34,12 +34,20 @@ class PetImageViewSet(viewsets.ModelViewSet):
         return Response({'succeeded': True})
   
     #画像評価のチェックの実行
-    @action(methods=['post'], detail=False)
+    #@action(methods=['post'], detail=False)
+    @action(methods=['get'], detail=False)
+    
     def check_img(self, request, pk=None):
-        max_cnt = 100
+        max_cnt = 5
+        """
         print(request.data)
         if "num" in request.data :
             max_cnt = int(request.data['num'])
+            print("max_cnt", max_cnt)
+        """
+        print(request.GET)
+        if "num" in request.GET :
+            max_cnt = int(request.GET['num'])
             print("max_cnt", max_cnt)
 
         #PetImageで未チェックのものを取得する。
@@ -74,6 +82,7 @@ class PetImageViewSet(viewsets.ModelViewSet):
                 print("x=-1", "no dog")
                 img.delete()
                 os.remove("media/"+str(img.img))
+                result = False
                 #delete db and image            
                 
                    #jd = json.loads("tmp_img_result1.json")
@@ -88,6 +97,7 @@ class PetImageViewSet(viewsets.ModelViewSet):
                 img.eval_result = js
                 img.move2checked_dir()
                 img.save()
+                result = True
         
             cnt+=1
            # img.check_status = 1
@@ -97,8 +107,8 @@ class PetImageViewSet(viewsets.ModelViewSet):
             #チェックがOKだったものの属性を変える
             #img.move2checked_dir()
             #img.save()
-    
-        return Response({'succeeded': True})
+        
+        return Response({'succeeded': result})
     
     #チェック済画像リストの取得    
     @action(methods=['get'], detail=False)

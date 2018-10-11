@@ -126,7 +126,7 @@ def update_led_cntrl(d):
 
     #時間の確認
     if d.get('TIME') != None :
-        gled_time = int(d.get('TIME'))
+        gled_time = float(d.get('TIME'))
         #Timeが指定されている場合には時間を更新する。
         gled_start_time =  datetime.datetime.now()    
     else :

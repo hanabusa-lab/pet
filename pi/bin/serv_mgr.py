@@ -40,7 +40,7 @@ def serv_mov(val) :
 #Servスレッド
 def exec_serv_thread() :
     global gthread_enablefg, gserv_cntrl, gserv_pattern, gserv_time, gserv_start_time
-    serv_val_def = 55
+    serv_val_def = 50
     #サーボの値を初期化位置に設定する。
     serv_val = serv_val_def
     serv_dir = 1
@@ -103,8 +103,8 @@ def exec_serv_thread() :
         #SCAN駆動
         if gserv_pattern == ServPattern.SCAN : 
             #SCANの場合には、サンプリングタイム毎にゆっくり動く
-            minval = serv_val_def-20     #サーボ駆動時のmin値
-            maxval = serv_val_def+20     #サーボ駆動時のmax値
+            minval = serv_val_def-13     #サーボ駆動時のmin値
+            maxval = serv_val_def+13     #サーボ駆動時のmax値
             serv_val = serv_val+serv_dir*serv_div;
             if serv_val > maxval :
                 serv_val = maxval;

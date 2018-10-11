@@ -12,6 +12,8 @@ import picamera
 import  json
 import pprint
 from pet_def import *
+import requests
+import pprint
 
 #定義関連
 TAG_COLOR_CONF = "../dat/tag_color.json"
@@ -20,7 +22,7 @@ SWITCH_IO = 17  #スイッチのGPIOピン
 #SERV_IP = "172.20.10.6:8080" #サーバのIPアドレス
 SERV_IP = "192.168.3.9:8080" #サーバのIPアドレス
 SERV_FG = True #サーバの有効化フラグ
-TAG_FG = True   #タグの有効化フラグ
+TAG_FG = False   #タグの有効化フラグ
 SHUTDOWN_TIME = 6
 
 #グローバル変数
@@ -88,16 +90,36 @@ def capture_send_img(tagid):
         os.system(cmd)
 
         #サーバーに対して画像チェック依頼
-        cmd = "curl -X POST -S 'http://"+SERV_IP+"/pet/api/check_img/' -d 'num=1'"
-        print(cmd)
-        os.system(cmd)
+        #cmd = "curl -X POST -S 'http://"+SERV_IP+"/pet/api/check_img/' -d 'num=1'"
+        #print(cmd)
+        #os.system(cmd)        
 
+        response = requests.get('http://'+SERV_IP+'/pet/api/check_img/',params={'num': '1'})
+        print("result", response.json()['succeeded'])
+        pprint.pprint(response.json()) 
+
+        
     #LEDリクエストのOFF
     print("off request")
     d={'CNTRL':int(LEDCntrl.STOP)}
     print(d)
     with open(LED_REQ_FILE, 'w') as f:
         json.dump(d, f, indent=4)
+   
+    #サーバーの結果に応じた色の追加
+    if SERV_FG == True :
+        time.sleep(0.5)
+        #結果に応じた色の発色(OK, Yellow)
+        if response.json()['succeeded'] == True :
+            color = (255, 255, 0) #Yellow
+        else :
+            color = (255, 0, 0) #Red
+
+        d={'PATTERN':int(LEDPattern.WIPE), 'COLOR':(color[0], color[1], color[2]), 'CNTRL':int(LEDCntrl.START), 'TIME':'0.5'}
+        print(d)
+        with open(LED_REQ_FILE, 'w') as f:
+            json.dump(d, f, indent=4)
+
 
         #"http://localhost:8080/pet/api/check_img/" -d "num=2"
 
