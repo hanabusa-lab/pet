@@ -88,7 +88,7 @@ def capture_send_img(tagid):
         os.system(cmd)
 
         #サーバーに対して画像チェック依頼
-        cmd = "curl -X POST -S 'http://"+SERV_IP+"/pet/api/check_img/' -d 'num=2'"
+        cmd = "curl -X POST -S 'http://"+SERV_IP+"/pet/api/check_img/' -d 'num=1'"
         print(cmd)
         os.system(cmd)
 
