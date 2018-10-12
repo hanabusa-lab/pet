@@ -82,6 +82,7 @@ def exec_led_thread() :
          
         #停止処理の場合  
         if gled_cntrl ==  LEDCntrl.STOP:
+            print("thred gled_stop")
             colorWipe(strip, Color(0, 0, 0))
             sleep(SAMPLING_TIME)
             continue
@@ -93,17 +94,19 @@ def exec_led_thread() :
             if diftime.total_seconds() > gled_time :
                 colorWipe(strip, Color(0, 0, 0))
                 sleep(SAMPLING_TIME)
+                print("thred time passed")
                 continue
  
         #モードごとの実行
         if gled_pattern == LEDPattern.WIPE : 
-            print("exec color Wipe", gled_color)
+            print("thread exec color Wipe ", gled_color)
             colorWipe(strip, Color(gled_color[1], gled_color[0], gled_color[2])) 
             sleep(SAMPLING_TIME)
             continue
         
         if gled_pattern == LEDPattern.BRIGHT :
-               colorBright(strip, Color(gled_color[1], gled_color[0], gled_color[2])) 
+            print("thread exec color Bright ", gled_color)    
+            colorBright(strip, Color(gled_color[1], gled_color[0], gled_color[2])) 
 
         
 #LEDコントロール情報の更新

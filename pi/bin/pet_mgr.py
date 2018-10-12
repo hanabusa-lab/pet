@@ -19,10 +19,10 @@ import pprint
 TAG_COLOR_CONF = "../dat/tag_color.json"
 LED_REQ_FILE = "../dat/led_req.json"
 SWITCH_IO = 17  #スイッチのGPIOピン
-#SERV_IP = "172.20.10.6:8080" #サーバのIPアドレス
-SERV_IP = "192.168.3.9:8080" #サーバのIPアドレス
+SERV_IP = "172.20.10.6:8080" #サーバのIPアドレス
+#SERV_IP = "192.168.3.9:8080" #サーバのIPアドレス
 SERV_FG = True #サーバの有効化フラグ
-TAG_FG = False   #タグの有効化フラグ
+TAG_FG = True   #タグの有効化フラグ
 SHUTDOWN_TIME = 6
 
 #グローバル変数
@@ -39,7 +39,7 @@ def init_tag_reader() :
     print(greader.get_model())
     print(greader.get_supported_regions())
     greader.set_region("JP")
-    greader.set_read_plan([1], "GEN2", read_power=2000)
+    greader.set_read_plan([1], "GEN2", read_power=2200)
 
 #reader.start_reading(lambda tag: print(tag.epc, tag.antenna, tag.read_count, tag.rssi))
 #time.sleep(1)
@@ -119,7 +119,6 @@ def capture_send_img(tagid):
         print(d)
         with open(LED_REQ_FILE, 'w') as f:
             json.dump(d, f, indent=4)
-
 
         #"http://localhost:8080/pet/api/check_img/" -d "num=2"
 
