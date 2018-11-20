@@ -14,9 +14,9 @@ import glob
 from operator import itemgetter
 
 #定数
-GET_IMG_NUM = 5 #IMAGEの取得数
-EXEC_TIME =  60 #実行時間(秒)
-ONE_SLIDE_TIME = 8 #一つのスライドの時間　この時間と枚数からplaylist.m3u8の更新間隔を決める。
+GET_IMG_NUM = 30 #IMAGEの取得数
+EXEC_TIME =  100 #実行時間(秒)
+ONE_SLIDE_TIME = 2 #一つのスライドの時間　この時間と枚数からplaylist.m3u8の更新間隔を決める。
 STREAM_DIR = "../media/stream/"
 
 #image listの取得
@@ -60,7 +60,11 @@ def convert2slide(file, roix, roiy, roiw, roih):
             
     #一回、動画を作って、からtsファイルに追加した方が良さそう
     #動画作成
+    """
     cmd = "/usr/local/opt/ffmpeg/bin/ffmpeg -y -i "+file+" -filter_complex \"zoompan="+opx+":"+opy+":  z='zoom+0.002':  d=25*"+str(ONE_SLIDE_TIME)+":s=800x600\"  out.mp4"
+    """
+
+    cmd = "/usr/local/opt/ffmpeg/bin/ffmpeg -y -i "+file+" -filter_complex \"[0:v]scale=8000x6000,zoompan="+opx+":"+opy+":  z='zoom+0.002':  d=25*"+str(ONE_SLIDE_TIME)+":s=800x600\"  out.mp4"
     
     print(cmd)
     proc = subprocess.call( cmd , shell=True)
@@ -74,7 +78,7 @@ def convert2slide(file, roix, roiy, roiw, roih):
     proc = subprocess.call( cmd , shell=True)
 
     #m3u8ファイルへの追加
-    cmd = "/usr/local/opt/ffmpeg/bin/ffmpeg -i  out2.mp4 -pix_fmt yuv420p -c:v libx264   -vcodec libx264   -movflags faststart   -vprofile baseline -level 3.0   -g 150   -b:v 519k   -s 768x432   -acodec aac   -b:a 63.4k   -ar 44100   -flags +loop-global_header  -hls_time 5 -hls_list_size 5 -hls_flags append_list+omit_endlist+delete_segments   ../media/stream/playlist.m3u8"
+    cmd = "/usr/local/opt/ffmpeg/bin/ffmpeg -i  out2.mp4 -pix_fmt yuv420p -c:v libx264   -vcodec libx264   -movflags faststart   -vprofile baseline -level 3.0   -g 150   -b:v 519k   -s 768x432   -acodec aac   -b:a 63.4k   -ar 44100   -flags +loop-global_header  -hls_time 2 -hls_list_size 10 -hls_flags append_list+omit_endlist+delete_segments   ../media/stream/playlist.m3u8"
     print(cmd)
     proc = subprocess.call( cmd , shell=True)
 
