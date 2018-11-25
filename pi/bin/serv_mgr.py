@@ -44,9 +44,11 @@ def exec_serv_thread() :
     #サーボの値を初期化位置に設定する。
     serv_val = serv_val_def
     serv_dir = 1
-    serv_div = 2    #サーボ移動の分解能
-    serv_sampling_time = 0.1 #スキャン時のサンプリング時間
-            
+    #serv_div = 2    #サーボ移動の分解能
+    #serv_sampling_time = 0.1 #スキャン時のサンプリング時間
+    serv_div = 40    #サーボ移動の分解能
+    serv_sampling_time = 0.5 #スキャン時のサンプリング時間
+             
     while 1 :
         print("thread", gserv_cntrl, gserv_pattern, gserv_start_time, gserv_time)
         if gthread_enablefg == False :

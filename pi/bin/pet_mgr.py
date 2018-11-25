@@ -14,13 +14,14 @@ import pprint
 from pet_def import *
 import requests
 import pprint
+import fasteners
 
 #定義関連
 TAG_COLOR_CONF = "../dat/tag_color.json"
 LED_REQ_FILE = "../dat/led_req.json"
 SWITCH_IO = 17  #スイッチのGPIOピン
-SERV_IP = "172.20.10.6:8080" #サーバのIPアドレス
-#SERV_IP = "192.168.3.9:8080" #サーバのIPアドレス
+#SERV_IP = "172.20.10.6:8080" #サーバのIPアドレス
+SERV_IP = "192.168.3.9:8080" #サーバのIPアドレス
 SERV_FG = True #サーバの有効化フラグ
 TAG_FG = True   #タグの有効化フラグ
 SHUTDOWN_TIME = 6
@@ -29,6 +30,7 @@ SHUTDOWN_TIME = 6
 gcamera = ""
 greader = ""
 gtag_color = ""
+glock =""   #Lockファイル
 
 #Tagの初期化
 def init_tag_reader() :
@@ -40,6 +42,8 @@ def init_tag_reader() :
     print(greader.get_supported_regions())
     greader.set_region("JP")
     greader.set_read_plan([1], "GEN2", read_power=2200)
+    #greader.set_read_plan([1], "GEN2", read_power=1800)
+
 
 #reader.start_reading(lambda tag: print(tag.epc, tag.antenna, tag.read_count, tag.rssi))
 #time.sleep(1)
@@ -52,11 +56,12 @@ def init_camera() :
     gcamera.resolution = (1024, 768)
     gcamera.rotation=90
     #camera.hflip=True
+    #gcamera.vflip=True
     
     
 #画像の取得とサーバへの送信
 def capture_send_img(tagid):
-    global gcamera, gtag_color
+    global gcamera, gtag_color, glock
     print("gtag_color",gtag_color, "tagid",tagid)
 
     color = (255,255,255)
@@ -68,8 +73,29 @@ def capture_send_img(tagid):
     #LEDリクエストファイルの作成
     d={'PATTERN':int(LEDPattern.BRIGHT), 'COLOR':(color[0], color[1],color[2]), 'CNTRL':int(LEDCntrl.START), 'TIME':30}
     print(d)
+    glock.acquire()
     with open(LED_REQ_FILE, 'w') as f:
         json.dump(d, f, indent=4)
+    glock.release()
+
+    #ちょっとしてから撮影する。とったタイミングで光る
+    time.sleep(1)
+    d={'PATTERN':int(LEDPattern.WIPE), 'COLOR':(color[0], color[1], color[2]), 'CNTRL':int(LEDCntrl.START), 'TIME':'1.0'}
+    print(d)
+    glock.acquire()
+    with open(LED_REQ_FILE, 'w') as f:
+        json.dump(d, f, indent=4)
+    glock.release()
+    time.sleep(1)
+
+    #再びブライト開始
+    d={'PATTERN':int(LEDPattern.BRIGHT), 'COLOR':(color[0], color[1],color[2]), 'CNTRL':int(LEDCntrl.START), 'TIME':30}
+    print(d)
+    glock.acquire()
+    with open(LED_REQ_FILE, 'w') as f:
+        json.dump(d, f, indent=4)
+    glock.release()
+
 
     #ファイル名称の作成
     now= datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -77,7 +103,6 @@ def capture_send_img(tagid):
     print("filename=", filename)
     #cmd = 'raspistill -w 1200 -h 900 -n -t 10 -q 100 -e jpg -o '+filename
     #os.system(cmd)
-    
     #画像の取得
     gcamera.capture(filename)
 
@@ -103,9 +128,11 @@ def capture_send_img(tagid):
     print("off request")
     d={'CNTRL':int(LEDCntrl.STOP)}
     print(d)
+    glock.acquire()
     with open(LED_REQ_FILE, 'w') as f:
         json.dump(d, f, indent=4)
-   
+    glock.release()  
+
     #サーバーの結果に応じた色の追加
     if SERV_FG == True :
         time.sleep(0.5)
@@ -117,8 +144,10 @@ def capture_send_img(tagid):
 
         d={'PATTERN':int(LEDPattern.WIPE), 'COLOR':(color[0], color[1], color[2]), 'CNTRL':int(LEDCntrl.START), 'TIME':'0.5'}
         print(d)
+        glock.acquire()
         with open(LED_REQ_FILE, 'w') as f:
             json.dump(d, f, indent=4)
+        glock.release()
 
         #"http://localhost:8080/pet/api/check_img/" -d "num=2"
 
@@ -128,6 +157,9 @@ if __name__== '__main__':
     swchfg = ""
     preswchfg = ""
     swchpushtime =  datetime.datetime.now()
+
+    #ロックファイルの作成
+    glock = fasteners.InterProcessLock('/tmp/lockfile')
 
     #タグと色の対応づけ情報の取得
     with open(TAG_COLOR_CONF) as f:
@@ -176,9 +208,10 @@ if __name__== '__main__':
             tagid = taglist[0].epc
             print("tagid=",tagid, "strtagid", str(tagid), "strtagid2", str(tagid)[2:26])
             capture_send_img(str(tagid)[2:26])
-        
+       
         #Switchが押されていたら撮影を行う。
         if swchfg != preswchfg and  swchfg == 1:
+        #if True:
             print("switch on. exec capture")
             capture_send_img("MANUAL")
 

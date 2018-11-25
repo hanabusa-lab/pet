@@ -10,11 +10,11 @@ import sys
 from neopixel import *
 from pet_def import *
 import datetime
+import fasteners
 
 #定数定義
-SAMPLING_TIME=0.3           #サンプリングタイム
+SAMPLING_TIME=0.2           #サンプリングタイム
 LED_REQ='../dat/led_req.json' #LEDリクエストファイル
-
 # LED strip configuration:
 #LED_COUNT      = 16      # Number of LED pixels.
 LED_COUNT      = 2      # Number of LED pixels.
@@ -36,6 +36,7 @@ gled_pattern = 0
 gled_time = 0
 gled_color = (0,0,0)
 gled_start_time = None
+glock =""   #Lockファイル
 
 # Define functions which animate LEDs in various ways.
 def colorWipe(strip, color, wait_ms=50):
@@ -55,6 +56,18 @@ def colorBright(strip, color, wait_ms=50):
                 strip.setPixelColor(i, Color(0,0,0)) 
             strip.show()
         time.sleep(wait_ms/1000.0)
+
+def colorBright2(strip, color, wait_ms=50):
+    """Wipe color across display a pixel at a time."""
+    for j in range(5):
+        for i in range(strip.numPixels()):
+            if (i+j)%2 == 0 :
+                strip.setPixelColor(i, color)
+            else :
+                strip.setPixelColor(i, Color(0,0,0)) 
+            strip.show()
+        time.sleep(wait_ms/1000.0)
+
 
 #jsonファイルのパース処理
 def parse_req_file(filename) :
@@ -107,6 +120,11 @@ def exec_led_thread() :
         if gled_pattern == LEDPattern.BRIGHT :
             print("thread exec color Bright ", gled_color)    
             colorBright(strip, Color(gled_color[1], gled_color[0], gled_color[2])) 
+ 
+        if gled_pattern == LEDPattern.BRIGHT2:
+            print("thread exec color Bright2 ", gled_color)    
+            colorBright2(strip, Color(gled_color[1], gled_color[0], gled_color[2]), 500) 
+
 
         
 #LEDコントロール情報の更新
@@ -150,6 +168,8 @@ def handler(signal, frame):
 if __name__== '__main__':
     #write json test
     
+    #ロックファイルの作成
+    glock = fasteners.InterProcessLock('/tmp/lockfile')
     """
     d={'PATTERN':1, 'COLOR':(1,2,3), 'CNTRL':'1', 'TIME':20}
     print(d)
@@ -172,10 +192,15 @@ if __name__== '__main__':
     
     #実行ループ(ファイルチェック)
     while 1 :
+        print("file check")
         #check conf file
         if os.path.exists(LED_REQ) == True :
+            print("file exist") 
+            glock.acquire()
             d=parse_req_file(LED_REQ)
             os.remove(LED_REQ)
+            glock.release()
+
             update_led_cntrl(d)
         
         sleep(SAMPLING_TIME)
